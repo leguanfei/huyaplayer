@@ -130,6 +130,55 @@ huya_live/
 - [dart_simple_live](https://github.com/xiaoyaocz/dart_simple_live) - Dart 实现的直播源获取
 - [DanmakuRender](https://github.com/SmallPeaches/DanmakuRender) - Python 实现的直播录制工具
 
+## Proxy API 模式
+
+通过 FastAPI Web 服务将虎牙直播流地址映射为固定 URL，适合在 nxmp 等播放器中使用。
+
+### 快速部署（Docker）
+
+```bash
+# 修改 docker-compose.yml 中的 HUYA_API_KEY
+docker compose up -d
+```
+
+### 手动运行
+
+```bash
+pip install -r requirements.txt
+HUYA_API_KEY=your_secret uvicorn api:app --host 0.0.0.0 --port 9898
+```
+
+### API 端点
+
+| 端点 | 说明 |
+|------|------|
+| `GET /huya/{room_id}?key=xxx` | 302 重定向到真实 FLV 地址 |
+| `GET /huya/{room_id}/info?key=xxx` | 返回房间信息 JSON |
+
+### 参数
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `key` | 必填 | API Key（环境变量 HUYA_API_KEY） |
+| `quality` | 0 | 清晰度: 0=原画, 2000=高清, 4000=超清 |
+| `cdn` | 自动 | CDN 线路: tx/ali/hw 等 |
+
+### NS 端使用
+
+在 SD 卡创建 `.strm` 文件：
+
+```
+http://服务器IP:9898/huya/123456?key=your_secret
+```
+
+或创建 `.m3u` 播放列表：
+
+```
+#EXTM3U
+#EXTINF:-1,虎牙-房间123456
+http://服务器IP:9898/huya/123456?key=your_secret
+```
+
 ## 许可证
 
 MIT License
