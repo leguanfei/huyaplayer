@@ -8,23 +8,31 @@ HuyaLive Proxy API
     HUYA_API_KEY=your_secret uvicorn api:app --host 0.0.0.0 --port 9898
 """
 
+import hmac
+import logging
 import os
 import asyncio
 from functools import partial
 
+import requests as requests_lib
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.responses import RedirectResponse, JSONResponse
 
 from huya import HuyaLive
 
+logger = logging.getLogger("huya_proxy")
+
 app = FastAPI(title="HuyaLive Proxy")
 
 API_KEY = os.environ.get("HUYA_API_KEY", "")
 
+if not API_KEY:
+    logger.warning("HUYA_API_KEY is not set! All requests will be rejected with 401.")
+
 
 def verify_key(key: str):
-    """验证 API Key"""
-    if not API_KEY or key != API_KEY:
+    """验证 API Key（使用时间安全的比较）"""
+    if not API_KEY or not hmac.compare_digest(key, API_KEY):
         raise HTTPException(
             status_code=401,
             detail={"error": "Unauthorized", "message": "Invalid or missing API key"},
@@ -33,8 +41,20 @@ def verify_key(key: str):
 
 async def run_sync(func, *args, **kwargs):
     """在线程池中运行同步函数，避免阻塞事件循环"""
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, partial(func, *args, **kwargs))
+
+
+def _map_profile_error(e: Exception, room_id: str) -> dict:
+    """将 get_room_profile() 的异常映射为错误结果字典"""
+    err_msg = str(e)
+    if "找不到这个主播" in err_msg or "涉嫌违规" in err_msg:
+        return {"type": "error", "status": 404, "error": "Not Found", "message": f"Room {room_id} not found"}
+    if "无法解析页面数据" in err_msg or "JSON解析错误" in err_msg:
+        return {"type": "error", "status": 404, "error": "Not Found", "message": f"Room {room_id} not found"}
+    if isinstance(e, requests_lib.exceptions.Timeout):
+        return {"type": "error", "status": 504, "error": "Gateway Timeout", "message": "Huya server timeout"}
+    return {"type": "error", "status": 504, "error": "Gateway Timeout", "message": "Huya server error"}
 
 
 def _resolve_stream_url(room_id: str, quality: int, cdn: str) -> dict:
@@ -44,30 +64,42 @@ def _resolve_stream_url(room_id: str, quality: int, cdn: str) -> dict:
         {"type": "redirect", "url": "..."}  — 成功，302 重定向
         {"type": "error", "status": 410, "error": "...", "message": "..."}  — 错误
     """
+    huya = HuyaLive(room_id)
+
     try:
-        huya = HuyaLive(room_id)
         room_profile = huya.get_room_profile()
     except Exception as e:
-        err_msg = str(e)
-        if "找不到这个主播" in err_msg or "涉嫌违规" in err_msg:
-            return {"type": "error", "status": 404, "error": "Not Found", "message": f"Room {room_id} not found"}
-        if "无法解析页面数据" in err_msg or "JSON解析错误" in err_msg:
-            return {"type": "error", "status": 404, "error": "Not Found", "message": f"Room {room_id} not found"}
-        return {"type": "error", "status": 504, "error": "Gateway Timeout", "message": "Huya server error"}
+        return _map_profile_error(e, room_id)
 
     if not room_profile.get("live"):
         return {"type": "error", "status": 410, "error": "Gone", "message": f"Room {room_id} is offline"}
 
+    # 使用 get_stream_urls() 而非 get_stream_url()，避免重复调用 get_room_profile()
     try:
-        url = huya.get_stream_url(cdn=cdn or None)
+        urls = huya.get_stream_urls()
     except Exception as e:
         err_msg = str(e)
+        if isinstance(e, requests_lib.exceptions.Timeout):
+            return {"type": "error", "status": 504, "error": "Gateway Timeout", "message": "Huya server timeout"}
         if "getCdnTokenInfoEx" in err_msg or "token" in err_msg.lower():
             return {"type": "error", "status": 500, "error": "Internal Error", "message": "Failed to get CDN token"}
         return {"type": "error", "status": 500, "error": "Internal Error", "message": "Failed to resolve stream URL"}
 
-    if not url:
+    if not urls:
         return {"type": "error", "status": 500, "error": "Internal Error", "message": "Failed to resolve stream URL"}
+
+    # 选择 CDN 线路
+    url = None
+    if cdn:
+        for u in urls:
+            if u["cdn"] == cdn:
+                url = u["url"]
+                break
+
+    if not url:
+        # 按优先级排序，返回最高优先级的
+        urls.sort(key=lambda x: x["priority"], reverse=True)
+        url = urls[0]["url"]
 
     # 添加清晰度参数（与 huya.py CLI 行为一致）
     if quality > 0:
@@ -98,14 +130,12 @@ async def redirect_stream(
 
 def _get_room_info(room_id: str) -> dict:
     """同步获取房间信息，返回结果字典"""
+    huya = HuyaLive(room_id)
+
     try:
-        huya = HuyaLive(room_id)
         room_profile = huya.get_room_profile()
     except Exception as e:
-        err_msg = str(e)
-        if "找不到这个主播" in err_msg or "涉嫌违规" in err_msg:
-            return {"type": "error", "status": 404, "error": "Not Found", "message": f"Room {room_id} not found"}
-        return {"type": "error", "status": 504, "error": "Gateway Timeout", "message": "Huya server error"}
+        return _map_profile_error(e, room_id)
 
     if not room_profile.get("live"):
         return {
@@ -113,7 +143,6 @@ def _get_room_info(room_id: str) -> dict:
             "data": {
                 "room_id": room_id,
                 "status": "offline",
-                "artist": room_profile.get("message", ""),
             },
         }
 
