@@ -150,7 +150,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 EXPOSE 9898
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", " , "--port", "9898"]
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "9898"]
 ```
 
 ### docker-compose.yml
