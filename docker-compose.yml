@@ -1,0 +1,8 @@
+services:
+  huya-proxy:
+    build: .
+    ports:
+      - "9898:9898"
+    environment:
+      - HUYA_API_KEY=change_me_to_your_secret_key
+    restart: unless-stopped
