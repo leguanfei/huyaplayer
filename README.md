@@ -95,6 +95,45 @@ python huya.py <房间号> --cdn tx --play
 - 数字房间号：`660002`
 - 主播昵称：`Maybe111`（会自动解析）
 
+## 桌面播放器（图形界面）
+
+`app.py` 是一个内嵌 mpv 的桌面播放器，无需安装 Python 即可使用打包后的单文件。
+
+### 直接运行
+
+```bash
+python app.py            # 打开播放器
+python app.py 988        # 打开并自动播放 988 房间
+```
+
+界面操作：
+
+- 输入房间号（支持 `988` 或完整虎牙链接），按回车或点击「观看」
+- 可选择清晰度（原画 / 高清 / 超清）与 CDN 线路（自动 / 腾讯 / 阿里 / 华为 / 网宿）
+- 「暂停 / 静音 / 全屏」，快捷键 `F11` 或 `Ctrl+F` 切换全屏，`Esc` 退出全屏
+- 播放时也可直接使用 mpv 自带快捷键（空格暂停、`m` 静音、`↑` `↓` 音量）
+
+### 弹幕侧栏
+
+- 拖动画面与侧栏之间的**握把条**（悬停变琥珀色）即可改宽度；双击握把复位到 320px
+- `Ctrl+←` / `Ctrl+Right` 以 40px 步进调整栏宽，`Ctrl+D` 或「弹幕」按钮开关侧栏（全屏时自动隐藏）
+- 栏宽始终保证画面不小于窗口 55%（且不小于 560px），窗口缩小时侧栏自动收敛、放大后自动恢复
+- `Ctrl+滚轮` 或右键菜单调整弹幕字号（10–13 档），栏宽与字号会记住
+- 右键菜单可复制选中 / 复制全部 / 清屏 / 复位栏宽
+- 往上翻看历史时**不再被新弹幕顶走**，底部出现「↓ 新消息 N 条」，点击回到最新即恢复跟随
+- 侧栏顶部的圆点表示弹幕连接状态，断线与重连会作为分隔行写入消息流
+
+弹幕通过 `wss://cdnws.api.huya.com` 的 TARS 协议实现（见 `huya_danmaku.py`），无需虎牙开发者账号，断线会自动重连。
+
+### 打包为单文件 exe
+
+```powershell
+# 首次会自动下载 mpv 播放器并安装依赖
+pwsh -File build.ps1
+```
+
+产物位于 `dist\HuyaLive.exe`，无需安装 Python 或 mpv，双击即可使用。
+
 ## 技术原理
 
 虎牙直播采用动态 Token 机制防止第三方取流，本工具通过以下步骤获取播放地址：
@@ -111,8 +150,13 @@ python huya.py <房间号> --cdn tx --play
 
 ```
 huya_live/
-├── huya.py              # 主程序入口
+├── huya.py              # 取流核心（房间信息 / WUP 动态 Token / 签名），也是 CLI 入口
+├── app.py               # 桌面播放器（Tkinter + 内嵌 mpv）
+├── chat_layout.py       # 弹幕侧栏的布局数学（栏宽边界、字号档位）
+├── huya_danmaku.py      # 弹幕客户端（wss + Tars）
+├── api.py               # FastAPI 代理，把动态流地址固定成一条 URL
 ├── requirements.txt     # Python 依赖
+├── tests/               # 布局数学单测 + 可跳过的 Tk 面板集成测试
 ├── tars/                # Tars 协议实现
 │   ├── __tars.py        # Tars 编解码核心
 │   ├── __packet.py      # 包结构
@@ -122,6 +166,15 @@ huya_live/
     ├── packet/          # 请求/响应结构
     └── ...
 ```
+
+## 测试
+
+```bash
+python -m unittest discover -s tests
+```
+
+`tests/test_chat_layout.py` 是纯逻辑单测；`tests/test_chat_panel_smoke.py` 需要能创建 Tk 窗口，
+无图形环境时会自动跳过。
 
 ## 致谢
 

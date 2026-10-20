@@ -312,9 +312,10 @@ class HuyaLive:
             if random.random() > 0.5 else \
             int(f"140000{random.randint(0, 9999999):07d}")
 
-    def get_stream_urls(self) -> list:
+    def get_stream_urls(self, room_profile: dict = None) -> list:
         """获取所有可用的直播流 URL"""
-        room_profile = self.get_room_profile()
+        if room_profile is None:
+            room_profile = self.get_room_profile()
         if not room_profile.get('live'):
             raise Exception(room_profile.get('message', '直播间未开播'))
 

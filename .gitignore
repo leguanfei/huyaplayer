@@ -26,6 +26,12 @@ ENV/
 env/
 .venv/
 
+# Bundled player binaries (downloaded by build.ps1)
+vendor/mpv/
+
+# PyInstaller
+*.spec
+
 # IDE
 .idea/
 .vscode/
