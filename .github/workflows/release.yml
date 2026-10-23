@@ -1,0 +1,64 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Create venv
+        run: python -m venv .venv
+
+      - name: Build
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./build.ps1
+
+      - name: Smoke test the packaged exe
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath .\dist\HuyaLive.exe -PassThru
+          $hwnd = [IntPtr]::Zero
+          for ($i = 0; $i -lt 50; $i++) {
+            Start-Sleep -Milliseconds 500
+            if ($p.HasExited) {
+              throw "HuyaLive.exe exited early with code $($p.ExitCode)"
+            }
+            foreach ($q in (Get-Process -Name HuyaLive -ErrorAction SilentlyContinue)) {
+              $q.Refresh()
+              if ($q.MainWindowHandle -ne 0) { $hwnd = $q.MainWindowHandle; break }
+            }
+            if ($hwnd -ne [IntPtr]::Zero) { break }
+          }
+          if ($hwnd -eq [IntPtr]::Zero) { throw "no window shown within 25s" }
+          Write-Host "window ok"
+          Get-Process -Name HuyaLive -ErrorAction SilentlyContinue | Stop-Process -Force
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HuyaLive-windows
+          path: dist/HuyaLive.exe
+          retention-days: 14
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/HuyaLive.exe
+          generate_release_notes: true

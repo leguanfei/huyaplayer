@@ -15,9 +15,14 @@ Write-Host "安装依赖..."
 
 if (-not (Test-Path $mpvExe)) {
     Write-Host "下载 mpv 播放器..."
+    # CI 的共享出口 IP 很容易撞上未认证 API 的限流，有 token 就带上
+    $headers = @{ "User-Agent" = "huya-live-build" }
+    if ($env:GITHUB_TOKEN) {
+        $headers["Authorization"] = "Bearer $env:GITHUB_TOKEN"
+    }
     $release = Invoke-RestMethod `
         -Uri "https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/releases/latest" `
-        -Headers @{ "User-Agent" = "huya-live-build" }
+        -Headers $headers
     $asset = $release.assets |
         Where-Object { $_.name -match "^mpv-x86_64-\d+.*\.7z$" } |
         Select-Object -First 1

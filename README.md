@@ -17,6 +17,11 @@
 [justwezzz/huya_live](https://github.com/justwezzz/huya_live)；
 桌面播放器、弹幕侧栏、主题系统与打包流程是在其基础上的二次开发。
 
+## 下载
+
+Windows 用户直接从 [Releases](https://github.com/leguanfei/huyaplayer/releases) 下载
+`HuyaLive.exe`，双击即用，无需安装 Python 或 mpv。
+
 ## 安装
 
 ### 依赖
@@ -98,6 +103,15 @@ pwsh -File build.ps1
 ```
 
 产物位于 `dist\HuyaLive.exe`，无需安装 Python 或 mpv，双击即可使用。
+
+发布版本不需要本地打包：推一个 `v*` tag 会触发
+[release workflow](.github/workflows/release.yml)，在 `windows-latest` 上跑同一套
+`build.ps1`，把 exe 挂到 Release。
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
 
 ## 命令行用法（可选）
 
