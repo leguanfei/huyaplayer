@@ -14,7 +14,7 @@ import shutil
 import sys
 import threading
 
-from PySide6.QtCore import QEasingCurve, QEvent, QPoint, QRect, Qt, QTimer
+from PySide6.QtCore import QEasingCurve, QEvent, QObject, QPoint, QRect, Qt, QTimer
 from PySide6.QtCore import QPropertyAnimation
 from PySide6.QtGui import QColor, QIcon, QLinearGradient, QPainter
 from PySide6.QtWidgets import (QApplication, QComboBox, QDialog,
@@ -461,6 +461,69 @@ class ShortcutSheet(QDialog):
         self.show()
 
 
+def _cursor_for_edge(edge) -> Qt.CursorShape:
+    left = bool(edge & Qt.LeftEdge)
+    right = bool(edge & Qt.RightEdge)
+    top = bool(edge & Qt.TopEdge)
+    bottom = bool(edge & Qt.BottomEdge)
+    if (left and top) or (right and bottom):
+        return Qt.SizeFDiagCursor
+    if (left and bottom) or (right and top):
+        return Qt.SizeBDiagCursor
+    if left or right:
+        return Qt.SizeHorCursor
+    return Qt.SizeVerCursor
+
+
+class EdgeResizeFilter(QObject):
+    """无边框窗口的边缘缩放。
+
+    Win32 WindowFromPoint 实测：窗口四边被 video_host / 弹幕栏 / 待机浮层这些
+    原生子窗口盖住，按压根本到不了主窗口，所以只能在应用层按全局坐标判定，
+    再让主窗口发起系统缩放。
+    """
+
+    def __init__(self, window: "PlayerWindow"):
+        super().__init__(window)
+        self._window = window
+        self._cursor_widget = None
+
+    def eventFilter(self, obj, event):
+        etype = event.type()
+        if etype not in (QEvent.MouseButtonPress, QEvent.MouseMove):
+            return False
+        if not self._window.isVisible():
+            return False
+        edge = self._window.edge_at_global(event.globalPosition().toPoint())
+        if etype == QEvent.MouseButtonPress:
+            if edge is None or event.button() != Qt.LeftButton:
+                return False
+            self._window.request_resize(edge)
+            return True
+        self._update_cursor(obj, edge)
+        return False
+
+    def _update_cursor(self, obj, edge) -> None:
+        if not isinstance(obj, QWidget):
+            return
+        if edge is not None:
+            cursor = _cursor_for_edge(edge)
+            if self._cursor_widget is obj and obj.cursor().shape() == cursor:
+                return
+            try:
+                obj.setCursor(cursor)
+            except RuntimeError:
+                self._cursor_widget = None
+                return
+            self._cursor_widget = obj
+        elif self._cursor_widget is not None:
+            try:
+                self._cursor_widget.unsetCursor()
+            except RuntimeError:
+                pass
+            self._cursor_widget = None
+
+
 class PlayerWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -561,6 +624,8 @@ class PlayerWindow(QWidget):
 
         self._quitting = False
         self._dot_state = "idle"
+        self._edge_filter = EdgeResizeFilter(self)
+        QApplication.instance().installEventFilter(self._edge_filter)
         self.shortcut_sheet = ShortcutSheet(self)
         self.shortcut_sheet.hide()
         self._build_tray()
@@ -572,38 +637,28 @@ class PlayerWindow(QWidget):
         else:
             self.showMaximized()
 
-    def _edge_at(self, pos: QPoint):
+    def edge_at_global(self, global_pos: QPoint):
+        """全局坐标落在窗口 6px 边框带内时返回对应的 Qt.Edge 组合。"""
         if self.isMaximized() or self.isFullScreen():
             return None
-        rect = self.rect()
-        left = pos.x() < RESIZE_EDGE
-        right = pos.x() > rect.width() - RESIZE_EDGE
-        top = pos.y() < RESIZE_EDGE
-        bottom = pos.y() > rect.height() - RESIZE_EDGE
-        if top and left:
-            return Qt.TopLeftCorner
-        if top and right:
-            return Qt.TopRightCorner
-        if bottom and left:
-            return Qt.BottomLeftCorner
-        if bottom and right:
-            return Qt.BottomRightCorner
-        if left:
-            return Qt.LeftEdge
-        if right:
-            return Qt.RightEdge
-        if top:
-            return Qt.TopEdge
-        if bottom:
-            return Qt.BottomEdge
-        return None
+        frame = self.frameGeometry()
+        if not frame.contains(global_pos):
+            return None
+        edge = Qt.Edge(0)
+        if global_pos.x() - frame.left() < RESIZE_EDGE:
+            edge |= Qt.LeftEdge
+        if frame.right() - global_pos.x() < RESIZE_EDGE:
+            edge |= Qt.RightEdge
+        if global_pos.y() - frame.top() < RESIZE_EDGE:
+            edge |= Qt.TopEdge
+        if frame.bottom() - global_pos.y() < RESIZE_EDGE:
+            edge |= Qt.BottomEdge
+        return edge or None
 
-    def mousePressEvent(self, event):
-        edge = self._edge_at(event.position().toPoint())
-        if edge is not None and event.button() == Qt.LeftButton:
-            self.windowHandle().startSystemResize(edge)
-            return
-        super().mousePressEvent(event)
+    def request_resize(self, edge) -> None:
+        handle = self.windowHandle()
+        if handle is not None:
+            handle.startSystemResize(edge)
 
     def _sync_popups(self) -> None:
         for popup in self._popups:
