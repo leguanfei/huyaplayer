@@ -152,7 +152,7 @@ h1 em { font-style: normal; color: var(--amber); }
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
   background: var(--panel);
 }
-.shot-frame img { width: 100%; height: auto; aspect-ratio: 1080 / 680; object-fit: cover; }
+.shot-frame img { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; }
 
 /* ---------- sections ---------- */
 section { padding: 56px 0; border-top: 1px solid var(--line); }
@@ -185,12 +185,11 @@ h2 {
   display: none;
   width: 100%;
   height: auto;
-  aspect-ratio: 1080 / 680;
+  aspect-ratio: 16 / 9;
   object-fit: cover;
   border-radius: var(--radius-card);
   border: 1px solid var(--line);
 }
-.shots img[data-ratio="full"] { aspect-ratio: 16 / 9; }
 
 #s1:checked ~ .tabs label[for="s1"],
 #s2:checked ~ .tabs label[for="s2"],
