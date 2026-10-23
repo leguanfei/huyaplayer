@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
 $python = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
@@ -58,6 +58,12 @@ Write-Host "打包应用..."
     --add-data "vendor\mpv\mpv.exe;mpv" `
     --add-data "vendor\mpv\d3dcompiler_43.dll;mpv" `
     --add-data "assets\icon.ico;assets" `
+    --exclude-module "PySide6.QtQml" `
+    --exclude-module "PySide6.QtQuick" `
+    --exclude-module "PySide6.QtNetwork" `
+    --exclude-module "PySide6.QtSql" `
+    --exclude-module "PySide6.QtTest" `
+    --exclude-module "PySide6.QtXml" `
     "app.py"
 
 if ($LASTEXITCODE -ne 0) {
