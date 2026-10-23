@@ -1,13 +1,21 @@
-# 虎牙直播取流工具
+# 虎牙播放器 · HuyaPlayer
 
-轻量级虎牙直播流获取工具，支持直接使用 mpv 播放。
+基于 PySide6 + 内嵌 mpv 的虎牙直播桌面播放器，自带弹幕侧栏，可打包成单文件 exe。
 
-## 为什么需要这个工具？
+## 为什么用它？
 
-虎牙直播网页端播放器资源占用较高，本项目对于低配置机器来说：
-- 资源占用极低，老机器也能流畅观看高清直播
-- 支持硬件解码
-- 无弹幕、无特效，纯净观看体验
+虎牙网页端播放器是个很重的壳，本项目换成原生播放内核：
+
+- 画面交给 mpv 硬解，资源占用低，老机器也能流畅看高清
+- 弹幕走 TARS 协议直连，停靠侧栏 / 全屏浮层两种形态，不上网页
+- 无边框窗口、浮层控制条、亮暗主题、系统托盘
+- 取流内核也保留为 CLI 和 HTTP 代理，可单独使用
+
+## 与上游的关系
+
+取流协议（`huya.py` / `huya_wup/` / `tars/` / `huya_danmaku.py`）来自
+[justwezzz/huya_live](https://github.com/justwezzz/huya_live)；
+桌面播放器、弹幕侧栏、主题系统与打包流程是在其基础上的二次开发。
 
 ## 安装
 
@@ -21,8 +29,8 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/huya-live.git
-cd huya-live
+git clone https://github.com/leguanfei/huyaplayer.git
+cd huyaplayer
 
 # 安装 Python 依赖
 pip install -r requirements.txt
@@ -48,55 +56,7 @@ brew install mpv
 **Windows:**
 从 [mpv 官网](https://mpv.io/installation/) 下载安装。
 
-## 使用方法
-
-### 获取直播流 URL
-
-```bash
-python huya.py <房间号>
-```
-
-示例：
-```bash
-python huya.py 660002
-# 输出: https://tx.flv.huya.com/src/xxx.flv?wsSecret=xxx&...
-```
-
-### 直接播放
-
-```bash
-python huya.py <房间号> --play
-```
-
-### 指定清晰度
-
-```bash
-# 原画（默认）
-python huya.py <房间号> --play
-
-# 高清 (2000kbps)
-python huya.py <房间号> --play --quality 2000
-
-# 超清 (4000kbps)
-python huya.py <房间号> --play --quality 4000
-```
-
-### 指定 CDN 线路
-
-```bash
-# 列出所有可用 CDN
-python huya.py <房间号> --list-cdn
-
-# 指定 CDN（通常 tx、al 线路较稳定）
-python huya.py <房间号> --cdn tx --play
-```
-
-### 支持房间号格式
-
-- 数字房间号：`660002`
-- 主播昵称：`Maybe111`（会自动解析）
-
-## 桌面播放器（图形界面）
+## 使用（桌面播放器）
 
 `app.py` 是一个内嵌 mpv 的桌面播放器，无需安装 Python 即可使用打包后的单文件。
 
@@ -139,6 +99,21 @@ pwsh -File build.ps1
 
 产物位于 `dist\HuyaLive.exe`，无需安装 Python 或 mpv，双击即可使用。
 
+## 命令行用法（可选）
+
+播放器之外，`huya.py` 也可以单独当取流工具用：
+
+```bash
+python huya.py <房间号>               # 打印直播流 URL
+python huya.py <房间号> --play        # 交给系统 mpv 播放
+python huya.py <房间号> --play --quality 2000   # 高清
+python huya.py <房间号> --play --quality 4000   # 超清
+python huya.py <房间号> --list-cdn    # 列出所有可用 CDN
+python huya.py <房间号> --cdn tx --play         # 指定线路（tx / al 通常较稳）
+```
+
+房间号支持数字（`660002`）或主播昵称（`Maybe111`，会自动解析）。
+
 ## 技术原理
 
 虎牙直播采用动态 Token 机制防止第三方取流，本工具通过以下步骤获取播放地址：
@@ -154,7 +129,7 @@ pwsh -File build.ps1
 ## 项目结构
 
 ```
-huya_live/
+huyaplayer/
 ├── huya.py              # 取流核心（房间信息 / WUP 动态 Token / 签名），也是 CLI 入口
 ├── app.py               # 桌面播放器组装（PySide6 无边框窗口 + 内嵌 mpv）
 ├── theme.py             # 设计令牌与 QSS 生成（亮/暗两套，纯数据可单测）
@@ -243,7 +218,7 @@ http://服务器IP:9898/huya/123456?key=your_secret
 
 ## 许可证
 
-MIT License
+本项目以 MIT 许可证发布，全文见 [LICENSE](LICENSE)；上游 `huya_live` 同样声明为 MIT。
 
 ## 免责声明
 
