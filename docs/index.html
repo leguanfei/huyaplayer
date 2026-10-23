@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HuyaPlayer · 虎牙直播桌面播放器</title>
+  <meta name="description" content="基于 mpv 的虎牙直播桌面播放器：硬件解码、原生弹幕侧栏、沉浸式浮层控件，单文件免安装。">
+  <meta name="theme-color" content="#0b0d11">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="HuyaPlayer · 虎牙直播桌面播放器">
+  <meta property="og:description" content="mpv 硬解、原生弹幕、沉浸式浮层。没有网页壳，双击就能看。">
+  <meta property="og:url" content="https://leguanfei.github.io/huyaplayer/">
+  <meta property="og:image" content="https://leguanfei.github.io/huyaplayer/assets/shot-chat.jpg">
+  <link rel="icon" href="assets/icon.png" type="image/png">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到主要内容</a>
+
+  <header class="nav">
+    <div class="container">
+      <a class="brand" href="./">
+        <img src="assets/icon.png" alt="" width="22" height="22">
+        <span>HuyaPlayer</span>
+      </a>
+      <nav class="nav-links" aria-label="页面导航">
+        <a href="#shots">截图</a>
+        <a href="#features">功能</a>
+        <a href="#keys">快捷键</a>
+        <a href="#faq">常见问题</a>
+      </nav>
+      <span class="spacer"></span>
+      <a class="gh" href="https://github.com/leguanfei/huyaplayer">GitHub</a>
+      <a class="btn primary" href="https://github.com/leguanfei/huyaplayer/releases/latest/download/HuyaLive.exe">下载</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="container">
+        <div>
+          <p class="kicker">Windows · 单文件 · 免安装</p>
+          <h1 id="hero-title">看虎牙直播，<br>用一个<em>干净的播放器</em>。</h1>
+          <p class="lead">
+            mpv 硬件解码、原生弹幕侧栏、沉浸式浮层控件。<br>
+            没有网页壳，没有广告，双击就能看。
+          </p>
+          <div class="cta">
+            <a class="btn primary" href="https://github.com/leguanfei/huyaplayer/releases/latest/download/HuyaLive.exe">
+              下载 HuyaLive.exe
+            </a>
+            <a class="btn ghost" href="https://github.com/leguanfei/huyaplayer">查看源码</a>
+          </div>
+          <p class="meta">v1.0.0 · 86.8 MB · Windows 10/11 x64 · 无需安装 Python 或 mpv</p>
+        </div>
+
+        <div class="shot-frame">
+          <img src="assets/shot-chat.jpg" width="1080" height="680"
+               alt="HuyaPlayer 播放直播时的窗口：左侧是画面，右侧是弹幕侧栏，底部有浮层控制条">
+        </div>
+      </div>
+    </section>
+
+    <section id="shots" aria-labelledby="shots-title">
+      <div class="container">
+        <input class="shot-radio" type="radio" name="shot" id="s1" checked>
+        <input class="shot-radio" type="radio" name="shot" id="s2">
+        <input class="shot-radio" type="radio" name="shot" id="s3">
+        <h2 id="shots-title">三种状态，同一套交互</h2>
+        <p class="section-lead">待机、边看边刷弹幕、全屏沉浸——关掉侧栏也不会丢掉任何功能。</p>
+        <div class="tabs">
+          <label for="s1">待机页</label>
+          <label for="s2">弹幕侧栏</label>
+          <label for="s3">全屏浮层</label>
+        </div>
+        <div class="shots">
+          <img id="p1" src="assets/shot-idle.jpg" width="1080" height="680"
+               alt="待机页：居中大号房间号输入框、观看按钮、清晰度与线路选择">
+          <img id="p2" src="assets/shot-chat.jpg" width="1080" height="680"
+               alt="播放中：右侧弹幕侧栏带斑马纹与彩色昵称，底部浮层控制条显示音量与清晰度">
+          <img id="p3" data-ratio="full" src="assets/shot-full.jpg" width="1920" height="1080"
+               alt="全屏模式：画面铺满屏幕，弹幕侧栏变成半透明浮层贴在右缘">
+        </div>
+      </div>
+    </section>
+
+    <section id="features" aria-labelledby="features-title">
+      <div class="container">
+        <h2 id="features-title">为什么用它</h2>
+        <p class="section-lead">该有的都有，不该有的都没有。</p>
+        <div class="features">
+          <article class="card">
+            <div class="icon" aria-hidden="true">▶</div>
+            <h3>mpv 硬解</h3>
+            <p>画面交给 mpv，硬件解码、低占用，老机器也能稳稳看高清。</p>
+          </article>
+          <article class="card">
+            <div class="icon" aria-hidden="true">≡</div>
+            <h3>原生弹幕</h3>
+            <p>TARS 协议直连弹幕服务器，不加载网页，断线自动重连。</p>
+          </article>
+          <article class="card">
+            <div class="icon" aria-hidden="true">▤</div>
+            <h3>沉浸控件</h3>
+            <p>控件收在画面底部浮层里，鼠标静止两秒自动淡出，不挡画面。</p>
+          </article>
+          <article class="card">
+            <div class="icon" aria-hidden="true">◐</div>
+            <h3>亮暗主题</h3>
+            <p>一键切换外壳配色，画面区始终为黑，设置自动记住。</p>
+          </article>
+          <article class="card">
+            <div class="icon" aria-hidden="true">↻</div>
+            <h3>断流重连</h3>
+            <p>连接中断按 2/4/8/16/30 秒退避重试，不用手动重新连接。</p>
+          </article>
+          <article class="card">
+            <div class="icon" aria-hidden="true">↓</div>
+            <h3>单文件</h3>
+            <p>一个 exe 内置播放内核，双击即用，不用装 Python 或 mpv。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="keys" aria-labelledby="keys-title">
+      <div class="container">
+        <h2 id="keys-title">快捷键</h2>
+        <p class="section-lead">播放器内按 <kbd>F1</kbd> 随时查看。</p>
+        <div class="keys">
+          <div class="keyrow"><kbd>F11</kbd><span>切换全屏</span></div>
+          <div class="keyrow"><kbd>Ctrl + F</kbd><span>切换全屏</span></div>
+          <div class="keyrow"><kbd>Esc</kbd><span>退出全屏</span></div>
+          <div class="keyrow"><kbd>空格</kbd><span>暂停 / 继续</span></div>
+          <div class="keyrow"><kbd>M</kbd><span>静音</span></div>
+          <div class="keyrow"><kbd>↑ / ↓</kbd><span>音量加减</span></div>
+          <div class="keyrow"><kbd>Ctrl + D</kbd><span>显示 / 隐藏弹幕栏</span></div>
+          <div class="keyrow"><kbd>Ctrl + ← / →</kbd><span>弹幕栏宽度</span></div>
+          <div class="keyrow"><kbd>Ctrl + 滚轮</kbd><span>弹幕字号</span></div>
+          <div class="keyrow"><kbd>F1</kbd><span>快捷键面板</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" aria-labelledby="faq-title">
+      <div class="container">
+        <h2 id="faq-title">常见问题</h2>
+        <p class="section-lead">运行要求：</p>
+        <div class="reqs" style="margin-bottom: 28px">
+          <span class="chip"><b>Windows 10 / 11</b> 64 位</span>
+          <span class="chip">无需 Python</span>
+          <span class="chip">无需单独安装 mpv</span>
+          <span class="chip">磁盘占用约 <b>90 MB</b></span>
+        </div>
+
+        <details open>
+          <summary>需要自己安装 mpv 吗？</summary>
+          <p>不需要。exe 里已经内置了 mpv 播放内核，下载后双击即可运行。</p>
+        </details>
+        <details>
+          <summary>为什么杀毒软件会报毒？</summary>
+          <p>PyInstaller 打包的单文件程序没有代码签名，被启发式引擎误报很常见。源码完全公开，可以自行审阅或按 README 从源码构建；加入信任区后即可正常使用。</p>
+        </details>
+        <details>
+          <summary>支持哪些清晰度和线路？</summary>
+          <p>清晰度分为原画、高清、超清；线路可选自动、腾讯、阿里、华为、网宿。切换后会自动用新参数重新取流。</p>
+        </details>
+        <details>
+          <summary>只有 Windows 版本吗？</summary>
+          <p>目前只提供 Windows 打包。核心逻辑是 Python，理论上可以在其它平台从源码运行，但尚未做适配与测试。</p>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="legal">
+        <p style="margin: 0 0 6px">
+          HuyaPlayer 以 <a href="https://github.com/leguanfei/huyaplayer/blob/main/LICENSE">MIT</a> 许可发布。
+          取流协议部分来自 <a href="https://github.com/justwezzz/huya_live">justwezzz/huya_live</a>，
+          在此致谢。
+        </p>
+        <p style="margin: 0">
+          本项目仅供学习交流，不提供、不托管任何直播内容。使用请遵守虎牙直播的用户协议。
+        </p>
+      </div>
+      <div>
+        <a href="https://github.com/leguanfei/huyaplayer">GitHub</a> ·
+        <a href="https://github.com/leguanfei/huyaplayer/releases">所有版本</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
